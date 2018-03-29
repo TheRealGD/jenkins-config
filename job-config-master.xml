@@ -1,0 +1,192 @@
+<?xml version='1.1' encoding='UTF-8'?>
+<project>
+  <actions/>
+  <description>Builds &apos;master&apos; branch &lt;a href=&quot;https://github.com/TheRealGD/therealgd/tree/master&quot;&gt; here&lt;/a&gt; .</description>
+  <keepDependencies>false</keepDependencies>
+  <properties>
+    <com.coravy.hudson.plugins.github.GithubProjectProperty plugin="github@1.29.0">
+      <projectUrl>https://github.com/TheRealGD/therealgd/</projectUrl>
+      <displayName></displayName>
+    </com.coravy.hudson.plugins.github.GithubProjectProperty>
+    <com.sonyericsson.rebuild.RebuildSettings plugin="rebuild@1.27">
+      <autoRebuild>false</autoRebuild>
+      <rebuildDisabled>false</rebuildDisabled>
+    </com.sonyericsson.rebuild.RebuildSettings>
+    <hudson.model.ParametersDefinitionProperty>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>CLEANWORKSPACE</name>
+          <description>If checked, the build&apos;s workspace will be cleared and a Git checkout triggered.</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+      </parameterDefinitions>
+    </hudson.model.ParametersDefinitionProperty>
+  </properties>
+  <scm class="hudson.plugins.git.GitSCM" plugin="git@3.8.0">
+    <configVersion>2</configVersion>
+    <userRemoteConfigs>
+      <hudson.plugins.git.UserRemoteConfig>
+        <url>https://github.com/TheRealGD/therealgd.git</url>
+        <credentialsId>e42a54a9-8e78-445e-a4ff-5e612c0163eb</credentialsId>
+      </hudson.plugins.git.UserRemoteConfig>
+    </userRemoteConfigs>
+    <branches>
+      <hudson.plugins.git.BranchSpec>
+        <name>*/master</name>
+      </hudson.plugins.git.BranchSpec>
+    </branches>
+    <doGenerateSubmoduleConfigurations>false</doGenerateSubmoduleConfigurations>
+    <submoduleCfg class="list"/>
+    <extensions/>
+  </scm>
+  <canRoam>true</canRoam>
+  <disabled>false</disabled>
+  <blockBuildWhenDownstreamBuilding>false</blockBuildWhenDownstreamBuilding>
+  <blockBuildWhenUpstreamBuilding>false</blockBuildWhenUpstreamBuilding>
+  <triggers/>
+  <concurrentBuild>false</concurrentBuild>
+  <builders>
+    <hudson.tasks.Shell>
+      <command>node -v
+npm -v
+composer -V
+php -version
+phpunit --version
+npm install
+npm run build-prod</command>
+    </hudson.tasks.Shell>
+    <org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder plugin="conditional-buildstep@1.3.6">
+      <condition class="org.jenkins_ci.plugins.run_condition.core.BooleanCondition" plugin="run-condition@1.0">
+        <token>${DEPLOY}</token>
+      </condition>
+      <buildStep class="jenkins.plugins.publish_over_ssh.BapSshBuilderPlugin" plugin="publish-over-ssh@1.19.1">
+        <delegate>
+          <consolePrefix>SSH: </consolePrefix>
+          <delegate plugin="publish-over@0.21">
+            <publishers>
+              <jenkins.plugins.publish__over__ssh.BapSshPublisher plugin="publish-over-ssh@1.19.1">
+                <configName>Digital Ocean box (DEV)</configName>
+                <verbose>false</verbose>
+                <transfers>
+                  <jenkins.plugins.publish__over__ssh.BapSshTransfer>
+                    <remoteDirectory></remoteDirectory>
+                    <sourceFiles>**/*</sourceFiles>
+                    <excludes>.git/**</excludes>
+                    <removePrefix></removePrefix>
+                    <remoteDirectorySDF>false</remoteDirectorySDF>
+                    <flatten>false</flatten>
+                    <cleanRemote>false</cleanRemote>
+                    <noDefaultExcludes>false</noDefaultExcludes>
+                    <makeEmptyDirs>true</makeEmptyDirs>
+                    <patternSeparator>[, ]+</patternSeparator>
+                    <execCommand></execCommand>
+                    <execTimeout>120000</execTimeout>
+                    <usePty>false</usePty>
+                    <useAgentForwarding>false</useAgentForwarding>
+                  </jenkins.plugins.publish__over__ssh.BapSshTransfer>
+                </transfers>
+                <useWorkspaceInPromotion>false</useWorkspaceInPromotion>
+                <usePromotionTimestamp>false</usePromotionTimestamp>
+              </jenkins.plugins.publish__over__ssh.BapSshPublisher>
+            </publishers>
+            <continueOnError>false</continueOnError>
+            <failOnError>false</failOnError>
+            <alwaysPublishFromMaster>false</alwaysPublishFromMaster>
+            <hostConfigurationAccess class="jenkins.plugins.publish_over_ssh.BapSshPublisherPlugin" reference="../.."/>
+          </delegate>
+        </delegate>
+      </buildStep>
+      <runner class="org.jenkins_ci.plugins.run_condition.BuildStepRunner$Fail" plugin="run-condition@1.0"/>
+    </org.jenkinsci.plugins.conditionalbuildstep.singlestep.SingleConditionalBuilder>
+  </builders>
+  <publishers>
+    <com.github.jenkins.lastchanges.LastChangesPublisher plugin="last-changes@2.6.1">
+      <specificRevision></specificRevision>
+      <specificBuild></specificBuild>
+      <since>PREVIOUS_REVISION</since>
+      <format>LINE</format>
+      <matching>NONE</matching>
+      <vcsDir></vcsDir>
+      <showFiles>true</showFiles>
+      <synchronisedScroll>true</synchronisedScroll>
+      <matchWordsThreshold>0.25</matchWordsThreshold>
+      <matchingMaxComparisons>1000</matchingMaxComparisons>
+      <isGit>false</isGit>
+      <isSvn>false</isSvn>
+    </com.github.jenkins.lastchanges.LastChangesPublisher>
+  </publishers>
+  <buildWrappers>
+    <hudson.plugins.ws__cleanup.PreBuildCleanup plugin="ws-cleanup@0.34">
+      <deleteDirs>false</deleteDirs>
+      <cleanupParameter>CLEANWORKSPACE</cleanupParameter>
+      <externalDelete></externalDelete>
+    </hudson.plugins.ws__cleanup.PreBuildCleanup>
+    <org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper plugin="credentials-binding@1.16">
+      <bindings>
+        <org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordBinding>
+          <credentialsId>e42a54a9-8e78-445e-a4ff-5e612c0163eb</credentialsId>
+          <variable>GITHUB_CREDENTIALS</variable>
+        </org.jenkinsci.plugins.credentialsbinding.impl.UsernamePasswordBinding>
+      </bindings>
+    </org.jenkinsci.plugins.credentialsbinding.impl.SecretBuildWrapper>
+    <hudson.plugins.release.ReleaseWrapper plugin="release@2.10.1">
+      <releaseVersionTemplate></releaseVersionTemplate>
+      <doNotKeepLog>false</doNotKeepLog>
+      <overrideBuildParameters>false</overrideBuildParameters>
+      <parameterDefinitions>
+        <hudson.model.BooleanParameterDefinition>
+          <name>CLEANWORKSPACE</name>
+          <description>&lt;h3&gt;If checked, the build&apos;s workspace will be cleared and a Git checkout triggered.&lt;/h3&gt;</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.StringParameterDefinition>
+          <name>RELEASE_VERSION</name>
+          <description>&lt;h3&gt;Semantic version of this release -  &lt;font color=&quot;red&quot;&gt;x.y.z&lt;/font&gt;, where x,y &amp; z are integers. For example, 1.0.0 or 2.17.2.&lt;/h3&gt;
+&lt;h3&gt; This version will be the name of the tag created in GitHub repo &lt;/h3&gt;</description>
+          <defaultValue></defaultValue>
+          <trim>false</trim>
+        </hudson.model.StringParameterDefinition>
+        <hudson.model.BooleanParameterDefinition>
+          <name>DEPLOY</name>
+          <description>&lt;h3&gt;Check this box if you want to deploy to PROD server&lt;/h3&gt;</description>
+          <defaultValue>false</defaultValue>
+        </hudson.model.BooleanParameterDefinition>
+        <hudson.model.TextParameterDefinition>
+          <name>RELEASE_NOTES</name>
+          <description>&lt;h3&gt;What was implemented in this release ? Put each feature on a separate line (can be modified later in GitHub)&lt;/h3&gt;</description>
+          <defaultValue>FEATURE 1
+FEATURE 2
+FEATURE 3
+FEATURE n
+</defaultValue>
+          <trim>false</trim>
+        </hudson.model.TextParameterDefinition>
+      </parameterDefinitions>
+      <preBuildSteps/>
+      <postBuildSteps/>
+      <postSuccessfulBuildSteps>
+        <org.jenkinsci.plugins.configfiles.builder.ConfigFileBuildStep plugin="config-file-provider@2.18">
+          <managedFiles>
+            <org.jenkinsci.plugins.configfiles.buildwrapper.ManagedFile>
+              <fileId>b24753f7-bbf4-49f6-8c87-78a77d656b4a</fileId>
+              <targetLocation>${WORKSPACE}/git-release.groovy</targetLocation>
+              <replaceTokens>false</replaceTokens>
+            </org.jenkinsci.plugins.configfiles.buildwrapper.ManagedFile>
+          </managedFiles>
+        </org.jenkinsci.plugins.configfiles.builder.ConfigFileBuildStep>
+        <hudson.tasks.Shell>
+          <command>groovy -version
+groovy ${WORKSPACE}/git-release.groovy ${GITHUB_CREDENTIALS} ${GIT_BRANCH} ${RELEASE_VERSION} &quot;${RELEASE_NOTES}&quot;
+
+# Show git tags to prove that Groovy script generated new tag for this release
+git tag</command>
+        </hudson.tasks.Shell>
+      </postSuccessfulBuildSteps>
+      <postFailedBuildSteps/>
+      <preMatrixBuildSteps/>
+      <postSuccessfulMatrixBuildSteps/>
+      <postFailedMatrixBuildSteps/>
+      <postMatrixBuildSteps/>
+    </hudson.plugins.release.ReleaseWrapper>
+  </buildWrappers>
+</project>
